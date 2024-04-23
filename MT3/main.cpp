@@ -16,9 +16,12 @@ struct Matrix4x4 {
 //move
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 result{};
-	result.m[0][3] = translate.x;
-	result.m[1][3] = translate.y;
-	result.m[2][3] = translate.z;
+	result.m[3][0] = translate.x;
+	result.m[3][1] = translate.y;
+	result.m[3][2] = translate.z;
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = 1.0f;
+	result.m[2][2] = 1.0f;
 	result.m[3][3] = 1.0f;
 	return result;
 };
@@ -36,11 +39,11 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 //座標変換
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	Vector3 result{};
-	result.x = matrix.m[0][0] * vector.x + matrix.m[0][1] * vector.y + matrix.m[0][2] * vector.z + matrix.m[0][3] * 1.0f;
-	result.y = matrix.m[1][0] * vector.x + matrix.m[1][1] * vector.y + matrix.m[1][2] * vector.z + matrix.m[1][3] * 1.0f;
-	result.z = matrix.m[2][0] * vector.x + matrix.m[2][1] * vector.y + matrix.m[2][2] * vector.z + matrix.m[2][3] * 1.0f;
+	result.x = matrix.m[0][0] * vector.x + matrix.m[1][0] * vector.y + matrix.m[2][0] * vector.z + matrix.m[3][0] * 1.0f;
+	result.y = matrix.m[0][1] * vector.x + matrix.m[1][1] * vector.y + matrix.m[2][1] * vector.z + matrix.m[3][1] * 1.0f;
+	result.z = matrix.m[0][2] * vector.x + matrix.m[1][2] * vector.y + matrix.m[2][2] * vector.z + matrix.m[3][2] * 1.0f;
 
-	float w = matrix.m[3][0] * vector.x + matrix.m[3][1] * vector.y + matrix.m[3][2] * vector.z + matrix.m[3][3] * 1.0f;
+	float w = matrix.m[0][3] * vector.x + matrix.m[1][3] * vector.y + matrix.m[2][3] * vector.z + matrix.m[3][3] * 1.0f;
 
 	if (w != 1.0f && w != 0.0f) {
 		result.x /= w;
@@ -49,6 +52,8 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	}
 	return result;
 };
+
+/// 
 
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
@@ -101,10 +106,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
 		Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-		Vector3 point(2.3f, 3.8f, 1.4f);
-		Matrix4x4 transformMatrix={
+		Vector3 point{ 2.3f, 3.8f, 1.4f };
+		Matrix4x4 transformMatrix = {
 			1.0f,2.0f,3.0f,4.0f,
-			3.0f,1.3f,1.0f,2.0f,
+			3.0f,1.0f,1.0f,2.0f,
 			1.0f,4.0f,2.0f,3.0f,
 			2.0f,2.0f,1.0f,3.0f
 		};
@@ -121,7 +126,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		VectorScreenPrintf(0, 0, transformed, "transformed");
-		MatrixScreenPrintf(0, 20, transformMatrix, "transformMatrix");
+		MatrixScreenPrintf(0, 20, translateMatrix, "translateMatrix");
 		MatrixScreenPrintf(0, 20 + kRowHeight * 5, scaleMatrix, "scaleMatrix");
 
 		///
