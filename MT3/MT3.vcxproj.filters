@@ -112,5 +112,6 @@
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
     <ClInclude Include="cal.h" />
+    <ClInclude Include="DrawGrid.h" />
   </ItemGroup>
 </Project>
