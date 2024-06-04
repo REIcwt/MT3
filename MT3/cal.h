@@ -11,15 +11,32 @@ struct Matrix4x4 {
 	float m[4][4];
 };
 
-//#pragma region cross
-//
-//Vector3 Cross(const Vector3& v1, const Vector3& v2) {
-//	Vector3 result{};
-//
-//	return result;
-//};
-//
-//#pragma endregion
+#pragma region Subtract
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	return Vector3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+}
+#pragma endregion
+
+#pragma region Add
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	return Vector3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+}
+#pragma endregion
+
+#pragma region Dot
+float Dot(const Vector3& v1, const Vector3& v2) {
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+#pragma endregion
+
+#pragma region Clamp
+float Clamp(float value, float min, float max) {
+	if (value < min) return min;
+	if (value > max) return max;
+	return value;
+}
+#pragma endregion
+
 
 
 #pragma region Move(translate)
