@@ -43,6 +43,38 @@ float Length(const Vector3& v) {
 }
 #pragma endregion
 
+#pragma region Normalize
+Vector3 Normalize(const Vector3& v) {
+	float length = Length(v);
+	return { v.x / length, v.y / length, v.z / length };
+}
+#pragma endregion
+
+#pragma region Perpendicular
+Vector3 Perpendicular(const Vector3& vector) {
+	if (vector.x != 0.0f || vector.y != 0.0f) {
+		return { -vector.y, vector.x, 0.0f };
+	}
+	return { 0.0f, -vector.z, vector.y };
+}
+#pragma endregion
+
+#pragma region Cross
+Vector3 Cross(const Vector3& v1, const Vector3& v2) {
+	return { v1.y * v2.z - v1.z * v2.y,
+			 v1.z * v2.x - v1.x * v2.z,
+			 v1.x * v2.y - v1.y * v2.x };
+}
+#pragma endregion
+
+#pragma region Multiply
+Vector3 Multiply(const Vector3& vector, float scalar) {
+	return { vector.x * scalar, vector.y * scalar, vector.z * scalar };
+}
+#pragma endregion
+
+///
+
 #pragma region Move(translate)
 //move
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
@@ -387,4 +419,6 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 };
 
 #pragma endregion
+
+///
 

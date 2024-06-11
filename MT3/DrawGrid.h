@@ -44,63 +44,53 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 }
 }
 
-struct Sphere {
-	Vector3 center;
-	float radius;
+struct Segment {
+	Vector3 origin;
+	Vector3 diff;
 	uint32_t color;
 };
 
-void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
-
-	const uint32_t kSubdivision = 20;
-	const float kLonEvery = 2.0f *float(M_PI) / kSubdivision;
-	const float kLatEvery = float(M_PI) / kSubdivision;
-
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex; 
-
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			float lon = lonIndex * kLonEvery;
-
-			Vector3 a = {
-				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
-				sphere.center.y + sphere.radius * sinf(lat),
-				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
-			};
-
-			Vector3 b = {
-				sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-				sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
-				sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
-			};
-
-			Vector3 c = {
-			   sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-			   sphere.center.y + sphere.radius * sinf(lat),
-			   sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
-			};
-	
-			a = Transform(a, viewProjectionMatrix);
-			b = Transform(b, viewProjectionMatrix);
-			c = Transform(c, viewProjectionMatrix);
-
-			a = Transform(a, viewportMatrix);
-			b = Transform(b, viewportMatrix);
-			c = Transform(c, viewportMatrix);
-			
-			Novice::DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), color);
-			Novice::DrawLine(int(a.x), int(a.y), int(c.x), int(c.y), color);
-		}
-	}
+struct Plane {
+	Vector3 normal;
+	float distance;
+	uint32_t color;
 };
 
-bool IsCollision(const Sphere& s1, const Sphere& s2) {
-	float distance = Length(Subtract(s2.center, s1.center));
+void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start = Transform(segment.origin, viewProjectionMatrix);
+	start = Transform(start, viewportMatrix);
 
-	if (distance <= s1.radius + s2.radius) {
-		return true;
+	Vector3 end = Add(segment.origin, segment.diff);
+	end = Transform(end, viewProjectionMatrix);
+	end = Transform(end, viewportMatrix);
+
+	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+}
+
+void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 center = Multiply(plane.normal, plane.distance);
+	Vector3 perpendiculars[4];
+	perpendiculars[0] = Normalize(Perpendicular(plane.normal));
+	perpendiculars[1] = { -perpendiculars[0].x, -perpendiculars[0].y, -perpendiculars[0].z };
+	perpendiculars[2] = Cross(plane.normal, perpendiculars[0]);
+	perpendiculars[3] = { -perpendiculars[2].x, -perpendiculars[2].y, -perpendiculars[2].z };
+
+	Vector3 points[4];
+	for (int32_t index = 0; index < 4; ++index) {
+		Vector3 extend = Multiply(perpendiculars[index], 2.0f);
+		Vector3 point = Add(center, extend);
+		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
 	}
-	else {
-		return false;
-	}
-};
+
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[2].x), int(points[2].y), int(points[1].x), int(points[1].y), color);
+	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[3].x), int(points[3].y), color);
+	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[0].x), int(points[0].y), color);
+}
+
+bool IsCollision(const Segment& segment, const Plane& plane) {
+	float d1 = Dot(plane.normal, segment.origin) - plane.distance;
+	float d2 = Dot(plane.normal, Add(segment.origin, segment.diff)) - plane.distance;
+
+	return d1 * d2 <= 0.0f;
+}
