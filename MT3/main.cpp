@@ -26,8 +26,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Novice::GetMousePosition(&preMousePosX, &preMousePosY);
 	bool isMousePressed = false;
 
-	Sphere sphere1 = { {0.0f, 0.0f, 0.0f}, 1.0f };
-	Sphere sphere2 = { {0.5f, 0.5f, 0.5f}, 0.5f };
+	Sphere sphere = { {0.0f, 0.0f, 0.0f}, 1.0f };
+	Plane plane = { {0.0f, 1.0f, 0.0f}, 1.0f };
 	
 	///
 	Vector3 rotate{0,0,0 };
@@ -102,17 +102,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Debug");
 		ImGui::DragFloat3("CameraTranslate", &translate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &rotate.x, 0.01f);
-		ImGui::DragFloat3("Sphere[0].Center", &sphere1.center.x, 0.01f);
-		ImGui::DragFloat("Sphere[0].Radius", &sphere1.radius, 0.01f);
-		ImGui::DragFloat3("Sphere[1].Center", &sphere2.center.x, 0.01f);
-		ImGui::DragFloat("Sphere[1].Radius", &sphere2.radius, 0.01f);
+		ImGui::DragFloat3("Sphere[0].Center", &sphere.center.x, 0.01f);
+		ImGui::DragFloat("Sphere[0].Radius", &sphere.radius, 0.01f);
+		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
+		plane.normal = Normalize(plane.normal);
+		ImGui::DragFloat("Plane Distance", &plane.distance, 0.01f);
 		ImGui::End();
 
-		if (IsCollision(sphere1, sphere2)) {
-			sphere1.color = RED;
+		if (IsCollision(sphere, plane)) {
+			sphere.color = RED;
 		}
 		else {
-			sphere1.color = WHITE;
+			sphere.color = WHITE;
 		}
 
 
@@ -133,8 +134,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		DrawSphere(sphere1, worldViewProjectionMatrix, viewportMatrix, sphere1.color);
-		DrawSphere(sphere2, worldViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, sphere.color);
+		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, WHITE);
 
 		///
 		/// ↑描画処理ここまで
