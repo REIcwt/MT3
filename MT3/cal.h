@@ -37,7 +37,11 @@ float Clamp(float value, float min, float max) {
 }
 #pragma endregion
 
-
+#pragma region Length
+float Length(const Vector3& v) {
+	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+#pragma endregion
 
 #pragma region Move(translate)
 //move

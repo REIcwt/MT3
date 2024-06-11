@@ -47,39 +47,7 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 struct Sphere {
 	Vector3 center;
 	float radius;
-};
-
-struct Line {
-	Vector3 origin;
-	Vector3 diff;
-};
-
-struct Ray {
-	Vector3 origin;
-	Vector3 diff;
-};
-
-struct Segment {
-	Vector3 origin;
-	Vector3 diff;
-};
-
-Vector3 Project(const Vector3& v1, const Vector3& v2) {
-	float dotProduct = Dot(v1, v2);
-	float lengthSquared = Dot(v2, v2);
-	return { (dotProduct / lengthSquared) * v2.x, (dotProduct / lengthSquared) * v2.y, (dotProduct / lengthSquared) * v2.z };
-};
-
-Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
-	Vector3 a = Subtract(point, segment.origin);
-	float segmentLengthSquared = Dot(segment.diff, segment.diff);
-	float t = Dot(a, segment.diff) / segmentLengthSquared;
-
-	t = Clamp(t, 0.0f, 1.0f);
-
-	Vector3 cp = Add(segment.origin, { segment.diff.x * t, segment.diff.y * t, segment.diff.z * t });
-
-	return cp;
+	uint32_t color;
 };
 
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
@@ -126,11 +94,13 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 	}
 };
 
-void DrawLine(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+bool IsCollision(const Sphere& s1, const Sphere& s2) {
+	float distance = Length(Subtract(s2.center, s1.center));
 
-	Vector3 start = Transform(Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
-	Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
-
-	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
-
+	if (distance <= s1.radius + s2.radius) {
+		return true;
+	}
+	else {
+		return false;
+	}
 };

@@ -20,16 +20,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	float kWindowWidth = 1280;
 	float kWindowHeight = 720;
 
-	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
-	Vector3 point{ -1.5f,0.6f,0.6f };
+	int mousePosX, mousePosY;
+	int preMousePosX, preMousePosY;
+	Novice::GetMousePosition(&mousePosX, &mousePosY);
+	Novice::GetMousePosition(&preMousePosX, &preMousePosY);
+	bool isMousePressed = false;
 
-	Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
-	Vector3 closestPoint = ClosestPoint(point, segment);
-
-	//
-	///Sphere sphere = { {0.0f, 0.0f, 0.0f}, 1.0f };
-	//
-
+	Sphere sphere1 = { {0.0f, 0.0f, 0.0f}, 1.0f };
+	Sphere sphere2 = { {0.5f, 0.5f, 0.5f}, 0.5f };
+	
 	///
 	Vector3 rotate{0,0,0 };
 	Vector3 translate{ 0,0,0 };
@@ -46,6 +45,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
+#pragma region Mouse Control Cam
+
+		Novice::GetMousePosition(&mousePosX, &mousePosY);
+
+		if (Novice::IsPressMouse(1)) {
+			isMousePressed = true;
+		}
+		else {
+			isMousePressed = false;
+		}
+		//z-
+		if (isMousePressed) {
+			float deltaX = float(mousePosX - preMousePosX);
+			float deltaY = float(mousePosY - preMousePosY);
+
+			cameraRotate.y += deltaX * 0.005f;
+			cameraRotate.x += deltaY * 0.005f;
+
+			if (cameraRotate.x > float(M_PI_2)) {
+				cameraRotate.x = float(M_PI_2);
+			}
+			else if (cameraRotate.x < float(-M_PI_2)) {
+				cameraRotate.x = float(-M_PI_2);
+			}
+		}
+		
+		//x-y-
+		if (keys[DIK_A]) {
+			cameraTranslate.x -= 0.05f;
+		}
+		else if (keys[DIK_D]) {
+			cameraTranslate.x += 0.05f;
+		}
+
+		if (keys[DIK_W]) {
+			cameraTranslate.y += 0.05f;
+		}
+		else if (keys[DIK_S]) {
+			cameraTranslate.y -= 0.05f;
+		}
+
+		int scroll = Novice::GetWheel();
+		if (scroll != 0) {
+			cameraTranslate.z += scroll * 0.001f;
+		}
+
+			preMousePosX = mousePosX;
+			preMousePosY = mousePosY;
+#pragma endregion
+
 		///
 		/// ↓更新処理ここから
 		///
@@ -53,11 +102,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Debug");
 		ImGui::DragFloat3("CameraTranslate", &translate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &rotate.x, 0.01f);
-		ImGui::DragFloat3("Point", &point.x, 0.01f);
-		ImGui::DragFloat3("Segment origin", &segment.origin.x, 0.01f);
-		ImGui::DragFloat3("Segment diff", &segment.diff.x, 0.01f);
-		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		ImGui::DragFloat3("Sphere[0].Center", &sphere1.center.x, 0.01f);
+		ImGui::DragFloat("Sphere[0].Radius", &sphere1.radius, 0.01f);
+		ImGui::DragFloat3("Sphere[1].Center", &sphere2.center.x, 0.01f);
+		ImGui::DragFloat("Sphere[1].Radius", &sphere2.radius, 0.01f);
 		ImGui::End();
+
+		if (IsCollision(sphere1, sphere2)) {
+			sphere1.color = RED;
+		}
+		else {
+			sphere1.color = WHITE;
+		}
+
 
 		Matrix4x4 worldMatrix = MakeAffineMatrix({1.0f,1.0f,1.0f}, rotate, translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
@@ -66,9 +123,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		
-
-
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -77,16 +131,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		
-		Sphere pointShpere = { point, 0.01f };
-		Sphere closestPointSphere = { closestPoint, 0.01f };
-
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		DrawSphere(pointShpere, worldViewProjectionMatrix, viewportMatrix, RED);
-		DrawSphere(closestPointSphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
+		DrawSphere(sphere1, worldViewProjectionMatrix, viewportMatrix, sphere1.color);
+		DrawSphere(sphere2, worldViewProjectionMatrix, viewportMatrix, WHITE);
 
-		DrawLine(segment, worldViewProjectionMatrix, viewportMatrix, WHITE);
-		
 		///
 		/// ↑描画処理ここまで
 		///
