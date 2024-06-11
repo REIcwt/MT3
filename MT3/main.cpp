@@ -26,8 +26,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Novice::GetMousePosition(&preMousePosX, &preMousePosY);
 	bool isMousePressed = false;
 
-	Sphere sphere1 = { {0.0f, 0.0f, 0.0f}, 1.0f };
-	Sphere sphere2 = { {0.5f, 0.5f, 0.5f}, 0.5f };
+	///
+
+	AABB aabb1 = {
+		{-0.5f, -0.5f, -0.5f},
+		{0.5f, 0.5f, 0.5f}
+	};
+	AABB aabb2 = {
+		{0.2f, 0.2f, 0.2f},
+		{1.0f, 1.0f, 1.0f}
+	};
+
 	
 	///
 	Vector3 rotate{0,0,0 };
@@ -102,19 +111,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Debug");
 		ImGui::DragFloat3("CameraTranslate", &translate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &rotate.x, 0.01f);
-		ImGui::DragFloat3("Sphere[0].Center", &sphere1.center.x, 0.01f);
-		ImGui::DragFloat("Sphere[0].Radius", &sphere1.radius, 0.01f);
-		ImGui::DragFloat3("Sphere[1].Center", &sphere2.center.x, 0.01f);
-		ImGui::DragFloat("Sphere[1].Radius", &sphere2.radius, 0.01f);
+		ImGui::DragFloat3("AABB1.min", &aabb1.min.x, 0.01f);
+		ImGui::DragFloat3("AABB1.max", &aabb1.max.x, 0.01f);
+		ImGui::DragFloat3("AABB2.min", &aabb2.min.x, 0.01f);
+		ImGui::DragFloat3("AABB2.max", &aabb2.max.x, 0.01f);
 		ImGui::End();
 
-		if (IsCollision(sphere1, sphere2)) {
-			sphere1.color = RED;
+		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
+		aabb1.max.x = (std::max)(aabb1.min.x, aabb1.max.x);
+		aabb1.min.y = (std::min)(aabb1.min.y, aabb1.max.y);
+		aabb1.max.y = (std::max)(aabb1.min.y, aabb1.max.y);
+		aabb1.min.z = (std::min)(aabb1.min.z, aabb1.max.z);
+		aabb1.max.z = (std::max)(aabb1.min.z, aabb1.max.z);
+
+		aabb2.min.x = (std::min)(aabb2.min.x, aabb2.max.x);
+		aabb2.max.x = (std::max)(aabb2.min.x, aabb2.max.x);
+		aabb2.min.y = (std::min)(aabb2.min.y, aabb2.max.y);
+		aabb2.max.y = (std::max)(aabb2.min.y, aabb2.max.y);
+		aabb2.min.z = (std::min)(aabb2.min.z, aabb2.max.z);
+		aabb2.max.z = (std::max)(aabb2.min.z, aabb2.max.z);
+
+		if (IsCollision(aabb1, aabb2)) {
+			aabb1.color = RED;
 		}
 		else {
-			sphere1.color = WHITE;
+			aabb1.color = WHITE;
 		}
-
 
 		Matrix4x4 worldMatrix = MakeAffineMatrix({1.0f,1.0f,1.0f}, rotate, translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
@@ -133,8 +155,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		DrawSphere(sphere1, worldViewProjectionMatrix, viewportMatrix, sphere1.color);
-		DrawSphere(sphere2, worldViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, aabb1.color);
+		DrawAABB(aabb2, worldViewProjectionMatrix, viewportMatrix, WHITE);
 
 		///
 		/// ↑描画処理ここまで

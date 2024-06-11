@@ -44,63 +44,48 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 }
 }
 
-struct Sphere {
-	Vector3 center;
-	float radius;
+struct AABB {
+    Vector3 min;
+    Vector3 max;
 	uint32_t color;
 };
 
-void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 vertices[8];
+	vertices[0] = { aabb.min.x, aabb.min.y, aabb.min.z };
+	vertices[1] = { aabb.max.x, aabb.min.y, aabb.min.z };
+	vertices[2] = { aabb.min.x, aabb.max.y, aabb.min.z };
+	vertices[3] = { aabb.max.x, aabb.max.y, aabb.min.z };
+	vertices[4] = { aabb.min.x, aabb.min.y, aabb.max.z };
+	vertices[5] = { aabb.max.x, aabb.min.y, aabb.max.z };
+	vertices[6] = { aabb.min.x, aabb.max.y, aabb.max.z };
+	vertices[7] = { aabb.max.x, aabb.max.y, aabb.max.z };
 
-	const uint32_t kSubdivision = 20;
-	const float kLonEvery = 2.0f *float(M_PI) / kSubdivision;
-	const float kLatEvery = float(M_PI) / kSubdivision;
-
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex; 
-
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			float lon = lonIndex * kLonEvery;
-
-			Vector3 a = {
-				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
-				sphere.center.y + sphere.radius * sinf(lat),
-				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
-			};
-
-			Vector3 b = {
-				sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
-				sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
-				sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
-			};
-
-			Vector3 c = {
-			   sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
-			   sphere.center.y + sphere.radius * sinf(lat),
-			   sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
-			};
-	
-			a = Transform(a, viewProjectionMatrix);
-			b = Transform(b, viewProjectionMatrix);
-			c = Transform(c, viewProjectionMatrix);
-
-			a = Transform(a, viewportMatrix);
-			b = Transform(b, viewportMatrix);
-			c = Transform(c, viewportMatrix);
-			
-			Novice::DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), color);
-			Novice::DrawLine(int(a.x), int(a.y), int(c.x), int(c.y), color);
-		}
+	for (int i = 0; i < 8; ++i) {
+		vertices[i] = Transform(vertices[i], viewProjectionMatrix);
+		vertices[i] = Transform(vertices[i], viewportMatrix);
 	}
-};
 
-bool IsCollision(const Sphere& s1, const Sphere& s2) {
-	float distance = Length(Subtract(s2.center, s1.center));
+	Novice::DrawLine(int(vertices[0].x), int(vertices[0].y), int(vertices[1].x), int(vertices[1].y), color);
+	Novice::DrawLine(int(vertices[1].x), int(vertices[1].y), int(vertices[3].x), int(vertices[3].y), color);
+	Novice::DrawLine(int(vertices[3].x), int(vertices[3].y), int(vertices[2].x), int(vertices[2].y), color);
+	Novice::DrawLine(int(vertices[2].x), int(vertices[2].y), int(vertices[0].x), int(vertices[0].y), color);
 
-	if (distance <= s1.radius + s2.radius) {
-		return true;
-	}
-	else {
-		return false;
-	}
-};
+	Novice::DrawLine(int(vertices[4].x), int(vertices[4].y), int(vertices[5].x), int(vertices[5].y), color);
+	Novice::DrawLine(int(vertices[5].x), int(vertices[5].y), int(vertices[7].x), int(vertices[7].y), color);
+	Novice::DrawLine(int(vertices[7].x), int(vertices[7].y), int(vertices[6].x), int(vertices[6].y), color);
+	Novice::DrawLine(int(vertices[6].x), int(vertices[6].y), int(vertices[4].x), int(vertices[4].y), color);
+
+	Novice::DrawLine(int(vertices[0].x), int(vertices[0].y), int(vertices[4].x), int(vertices[4].y), color);
+	Novice::DrawLine(int(vertices[1].x), int(vertices[1].y), int(vertices[5].x), int(vertices[5].y), color);
+	Novice::DrawLine(int(vertices[2].x), int(vertices[2].y), int(vertices[6].x), int(vertices[6].y), color);
+	Novice::DrawLine(int(vertices[3].x), int(vertices[3].y), int(vertices[7].x), int(vertices[7].y), color);
+}
+
+
+bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
+	return (aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
+		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
+		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
+}
+
