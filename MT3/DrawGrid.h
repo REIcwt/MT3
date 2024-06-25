@@ -6,13 +6,13 @@
 
 
 void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	
+
 	const float kGridHalfWidth = 2.0f;
 	const uint32_t kSubdivision = 10; ///how many 
 
 	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
 
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex){
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
 		float x = -kGridHalfWidth + xIndex * kGridEvery;
 		Vector3 Xstart = { x, 0, -kGridHalfWidth };
 		Vector3 Xend = { x, 0, kGridHalfWidth };
@@ -23,9 +23,9 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Xend = Transform(Xend, viewportMatrix);
 
 		Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0xAAAAAAFF);
-		if (xIndex==5) {
+		if (xIndex == 5) {
 			Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0x000000FF);
-	}
+		}
 	}
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
 		float z = -kGridHalfWidth + zIndex * kGridEvery;
@@ -40,13 +40,19 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0xAAAAAAFF);
 		if (zIndex == 5) {
 			Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0x000000FF);
+		}
 	}
-}
 }
 
 struct AABB {
-    Vector3 min;
-    Vector3 max;
+	Vector3 min;
+	Vector3 max;
+	uint32_t color;
+};
+
+struct Segment {
+	Vector3 origin;
+	Vector3 diff;
 	uint32_t color;
 };
 
@@ -82,10 +88,35 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 	Novice::DrawLine(int(vertices[3].x), int(vertices[3].y), int(vertices[7].x), int(vertices[7].y), color);
 }
 
+void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start = Transform(segment.origin, viewProjectionMatrix);
+	start = Transform(start, viewportMatrix);
 
-bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
-	return (aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
-		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
-		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
+	Vector3 end = Add(segment.origin, segment.diff);
+	end = Transform(end, viewProjectionMatrix);
+	end = Transform(end, viewportMatrix);
+
+	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 }
 
+bool IsCollision(const AABB& aabb, const Segment& segment) {
+	float tNearX = (aabb.min.x - segment.origin.x) / segment.diff.x;
+	float tFarX = (aabb.max.x - segment.origin.x) / segment.diff.x;
+	if (tNearX > tFarX) std::swap(tNearX, tFarX);
+
+	float tNearY = (aabb.min.y - segment.origin.y) / segment.diff.y;
+	float tFarY = (aabb.max.y - segment.origin.y) / segment.diff.y;
+	if (tNearY > tFarY) std::swap(tNearY, tFarY);
+
+	float tNearZ = (aabb.min.z - segment.origin.z) / segment.diff.z;
+	float tFarZ = (aabb.max.z - segment.origin.z) / segment.diff.z;
+	if (tNearZ > tFarZ) std::swap(tNearZ, tFarZ);
+
+	float tmin = max(max(tNearX, tNearY), tNearZ);
+	float tmax = min(min(tFarX, tFarY), tFarZ);
+
+	if (tmin <= tmax) {
+		return true;
+	}
+	return false;
+}
