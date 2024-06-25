@@ -387,7 +387,7 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 //MakeOrthographicMatrix
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
 	Matrix4x4 result = {};
-		
+
 	result.m[0][0] = 2.0f / (right - left);
 	result.m[1][1] = 2.0f / (top - bottom);
 	result.m[2][2] = -2.0f / (farClip - nearClip);
@@ -421,4 +421,3 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 #pragma endregion
 
 ///
-

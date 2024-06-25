@@ -6,13 +6,13 @@
 
 
 void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	
+
 	const float kGridHalfWidth = 2.0f;
 	const uint32_t kSubdivision = 10; ///how many 
 
 	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
 
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex){
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
 		float x = -kGridHalfWidth + xIndex * kGridEvery;
 		Vector3 Xstart = { x, 0, -kGridHalfWidth };
 		Vector3 Xend = { x, 0, kGridHalfWidth };
@@ -23,9 +23,9 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Xend = Transform(Xend, viewportMatrix);
 
 		Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0xAAAAAAFF);
-		if (xIndex==5) {
+		if (xIndex == 5) {
 			Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0x000000FF);
-	}
+		}
 	}
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
 		float z = -kGridHalfWidth + zIndex * kGridEvery;
@@ -40,14 +40,19 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0xAAAAAAFF);
 		if (zIndex == 5) {
 			Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0x000000FF);
+		}
 	}
-}
 }
 
 struct AABB {
-    Vector3 min;
-    Vector3 max;
+	Vector3 min;
+	Vector3 max;
 	uint32_t color;
+};
+
+struct Sphere {
+	Vector3 center;
+	float radius;
 };
 
 void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
@@ -82,10 +87,56 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 	Novice::DrawLine(int(vertices[3].x), int(vertices[3].y), int(vertices[7].x), int(vertices[7].y), color);
 }
 
+void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
 
-bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
-	return (aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
-		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
-		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
+	const uint32_t kSubdivision = 20;
+	const float kLonEvery = 2.0f * float(M_PI) / kSubdivision;
+	const float kLatEvery = float(M_PI) / kSubdivision;
+
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex;
+
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = lonIndex * kLonEvery;
+
+			Vector3 a = {
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
+			};
+
+			Vector3 b = {
+				sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
+				sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon)
+			};
+
+			Vector3 c = {
+			   sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
+			   sphere.center.y + sphere.radius * sinf(lat),
+			   sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery)
+			};
+
+			a = Transform(a, viewProjectionMatrix);
+			b = Transform(b, viewProjectionMatrix);
+			c = Transform(c, viewProjectionMatrix);
+
+			a = Transform(a, viewportMatrix);
+			b = Transform(b, viewportMatrix);
+			c = Transform(c, viewportMatrix);
+
+			Novice::DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), color);
+			Novice::DrawLine(int(a.x), int(a.y), int(c.x), int(c.y), color);
+		}
+	}
+};
+
+bool IsCollision(const AABB& aabb, const Sphere& sphere) {
+	Vector3 closestPoint;
+	closestPoint.x = Clamp(sphere.center.x, aabb.min.x, aabb.max.x);
+	closestPoint.y = Clamp(sphere.center.y, aabb.min.y, aabb.max.y);
+	closestPoint.z = Clamp(sphere.center.z, aabb.min.z, aabb.max.z);
+
+	float distance = Length(Subtract(closestPoint, sphere.center));
+	return distance <= sphere.radius;
 }
-
