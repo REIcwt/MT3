@@ -37,9 +37,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{1.0f, 1.0f, 1.0f}
 	};
 
-	
+
 	///
-	Vector3 rotate{0,0,0 };
+	Vector3 rotate{ 0,0,0 };
 	Vector3 translate{ 0,0,0 };
 
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
@@ -79,7 +79,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				cameraRotate.x = float(-M_PI_2);
 			}
 		}
-		
+
 		//x-y-
 		if (keys[DIK_A]) {
 			cameraTranslate.x -= 0.05f;
@@ -100,8 +100,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			cameraTranslate.z += scroll * 0.001f;
 		}
 
-			preMousePosX = mousePosX;
-			preMousePosY = mousePosY;
+		preMousePosX = mousePosX;
+		preMousePosY = mousePosY;
 #pragma endregion
 
 		///
@@ -138,13 +138,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			aabb1.color = WHITE;
 		}
 
-		Matrix4x4 worldMatrix = MakeAffineMatrix({1.0f,1.0f,1.0f}, rotate, translate);
+		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -152,7 +152,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		
+
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
 		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, aabb1.color);

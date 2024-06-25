@@ -6,13 +6,13 @@
 
 
 void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	
+
 	const float kGridHalfWidth = 2.0f;
 	const uint32_t kSubdivision = 10; ///how many 
 
 	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
 
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex){
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
 		float x = -kGridHalfWidth + xIndex * kGridEvery;
 		Vector3 Xstart = { x, 0, -kGridHalfWidth };
 		Vector3 Xend = { x, 0, kGridHalfWidth };
@@ -23,9 +23,9 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Xend = Transform(Xend, viewportMatrix);
 
 		Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0xAAAAAAFF);
-		if (xIndex==5) {
+		if (xIndex == 5) {
 			Novice::DrawLine(int(Xstart.x), int(Xstart.y), int(Xend.x), int(Xend.y), 0x000000FF);
-	}
+		}
 	}
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
 		float z = -kGridHalfWidth + zIndex * kGridEvery;
@@ -40,13 +40,13 @@ void DrawGrid(const Matrix4x4& worldViewProjectionMatrix, const Matrix4x4& viewp
 		Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0xAAAAAAFF);
 		if (zIndex == 5) {
 			Novice::DrawLine(int(Zstart.x), int(Zstart.y), int(Zend.x), int(Zend.y), 0x000000FF);
+		}
 	}
-}
 }
 
 struct AABB {
-    Vector3 min;
-    Vector3 max;
+	Vector3 min;
+	Vector3 max;
 	uint32_t color;
 };
 
@@ -88,4 +88,3 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
 		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
 		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
 }
-
